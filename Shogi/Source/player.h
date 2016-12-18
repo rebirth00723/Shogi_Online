@@ -8,8 +8,13 @@ struct playerData {
 	struct sockaddr_in addr;
 
 };
+struct userData {
 
-void addPlayer(struct playerData *, struct playerData);
+	struct sockaddr_in addr;
+	char* ID[ID_SIZE];
+	boolean isServer;
+};
+struct playerData * addPlayer(struct playerData *, struct playerData);
 void clrPlayer(struct playerData *);
 int playerAmount(struct playerData *);
 

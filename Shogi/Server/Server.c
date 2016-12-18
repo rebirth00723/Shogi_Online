@@ -2,8 +2,8 @@
 #include <stdlib.h>
 #include <process.h>
 #include <winsock.h>
-#include "m_sk.h"
-#include "player.h"
+#include "../Source/m_sk.h"
+#include "../Source/player.h"
 
 
 
@@ -18,7 +18,8 @@ void sendNetworkData(struct playerData *);
 struct recv {
 
 	SOCKET sk;
-	int* connecting;
+	struct playerData* player;
+
 };
 
 
@@ -36,29 +37,31 @@ int main() {
 	int playerID;
 	printf("┌───────────────────┐\n");
 	printf("│　　　　　　　　　　　　　　　　　　　│\n");
-	printf("│　─傌─相─仕─帥─仕─相─傌─　│　│\n");
+	printf("│　硨─傌─相─仕─帥─仕─相─傌─硨　│\n");
 	printf("│　│　│　│　│╲│╱│　│　│　│　│\n");
-	printf("│　├─┼─┼─┼─╳─┼─┼─┼─┤　│\n");
+	printf("│　├─┼─┼─┼─┼─┼─┼─┼─┤　│\n");
 	printf("│　│　│　│　│╱│╲│　│　│　│　│\n");
 	printf("│　├─炮─┼─┼─┼─┼─┼─炮─┤　│\n");
 	printf("│　│　│　│　│　│　│　│　│　│　│\n");
 	printf("│　兵─┼─兵─┼─兵─┼─兵─┼─兵　│\n");
 	printf("│　│　│　│　│　│　│　│　│　│　│\n");
 	printf("│　├─┴─┴─┴─┴─┴─┴─┴─┤　│\n");
-	printf("│　│　　楚　　　　　　　　　漢　　│　│\n");
+	printf("│　│　　楚　河　　　　　漢　界　　│　│\n");
 	printf("│　├─┬─┬─┬─┬─┬─┬─┬─┤　│\n");
 	printf("│　│　│　│　│　│　│　│　│　│　│\n");
 	printf("│　卒─┼─卒─┼─卒─┼─卒─┼─卒　│\n");
 	printf("│　│　│　│　│　│　│　│　│　│　│\n");
 	printf("│　├─包─┼─┼─┼─┼─┼─包─┤　│\n");
 	printf("│　│　│　│　│╲│╱│　│　│　│　│\n");
-	printf("│　├─┼─┼─┼─╳─┼─┼─┼─┤　│\n");
+	printf("│　├─┼─┼─┼─┼─┼─┼─┼─┤　│\n");
 	printf("│　│　│　│　│╱│╲│　│　│　│　│\n");
 	printf("│　車─馬─象─士─將─士─象─馬─車　│\n");
 	printf("│　　　　　　　　　　　　　　　　　　　│\n");
 	printf("└───────────────────┘\n");
 
 	WaitForSingleObject(_beginthread(AcceptThread, 0, NULL), INFINITE);
+
+	WSACleanup();
 	system("pause");
 }
 
@@ -69,7 +72,7 @@ void ControlThread(void * param){
 
 	while (1) {
 	
-		gets_s(cmd, 4);
+		gets_s(cmd, sizeof(cmd));
 		if (!strcmp(cmd, "quit"))
 			break;
 	}
@@ -84,8 +87,8 @@ void AcceptThread(void * param){
 
 	struct sockaddr_in addr;
 	struct playerData playerData;
-	struct playerData pd[2] = { {.sk = -1} ,{.ID = -1} };
-
+	struct playerData players[2];
+	struct recv rd;
 	char buf[ID_SIZE];
 	int bytes;
 	int reval;
@@ -93,7 +96,7 @@ void AcceptThread(void * param){
 
 	boolean stop;
 
-	stop = true;
+	stop = false;
 
 	buildServer(&loc, &stop);
 
@@ -102,27 +105,30 @@ void AcceptThread(void * param){
 	while ( ! stop) {
 		
 		reval = acceptConnect(loc, &client, &addr);
-		recvData(loc, buf, 15);
+		recvData(client, buf, 15);//接收玩家ID
+
 
 		if (reval != -1) {
 
-			if (playerAmount < 2) {
+			playerData.addr = addr;
+			playerData.sk = loc;
+			strcpy(playerData.ID, buf);
 
-				playerData.addr = addr;
-				playerData.sk = loc;
-				strcpy(playerData.ID, buf);
+			
 
-				addPlayer(pd, playerData);
+			rd.player = addPlayer(players, playerData);;
+			rd.sk = client;
 
-				printf("玩家[%d]:連入，等待配對\n");
-			}
+			_beginthread(RecvThread, 0, &rd);
+
+			printf("玩家[%d]:連入，等待配對\n");
+			
 
 			if (playerAmount == 2) {
 				
-				printf("配對 玩家[%s] : 玩家[&s]", pd[0].ID, pd[1].ID);
+				printf("配對 玩家[%s] : 玩家[&s]", players[0].ID, players[1].ID);
 				
-				sendNetworkData(pd);				
-			
+				sendNetworkData(players);				
 				
 			}
 
@@ -130,32 +136,36 @@ void AcceptThread(void * param){
 		
 		}//if
 	}//while
-}//main
-
+}
 
 void RecvThread(void *param) {
 
 	struct recv r= *(struct recv*) param;
-
+	struct playerData* player = r.player;
 	SOCKET sk = r.sk;
-
-	int *connecting = r.connecting;
+	
 	int reval;
 
 	char buf[BUF_SIZE];
-
-	while (1) {
 			
-		reval = recvData(sk, buf, BUF_SIZE);
+	reval = recvData(sk, buf, BUF_SIZE);
 
-		if (reval == 0 && reval == -1) {
-			--*connecting;
-		
-		}
+	buf[reval] = '\0';
 
+	if (reval < 0) {
+			
+		player->sk = -1;
+		printf("玩家[%s]斷線\n", player->ID);
+			
 	}
 
 
+	if (strcmp(buf, SUCCESS_GET_DATA)) {
+		printf("玩家[%s]成功收到配對資料", player->ID);
+	}
+
+	
+	closesocket(player->sk);
 }
 
 
@@ -212,7 +222,8 @@ void sendNetworkData(struct playerData* players) {
 		p2.addr = players[2].addr;//改改看!r
 		strcpy(p2.ID, players[2].ID);
 	}
-	
+	p1.isServer = true;
+	p2.isServer = false;
 	memcpy(buf, &p1, sizeof(p1));
 
 	send(players[1].sk, buf, sizeof(buf), 0);

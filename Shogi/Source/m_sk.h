@@ -2,21 +2,17 @@
 #define boolean int
 #define true 1
 #define false 0
+#define SUCCESS_GET_DATA "2"
 #define ps() system("pause")
 #define cls() system("cls")
 
 #pragma warning(disable: 4996)
 #pragma comment (lib, "wsock32.lib")
 
-struct userData {
 
-	struct sockaddr_in addr;
-	char* ID[ID_SIZE];
-
-};
 
 int acceptConnect(SOCKET listen, SOCKET* connect,  struct sockaddr_in* conn_addr);
-int bindsocket(SOCKET, struct sockaddr_in *);
+int bindsocket(SOCKET, struct sockaddr_in*);
 int checkError(int, char*);
 void createAddr(struct sockaddr_in*, char*, int);
 void createAddrA(struct sockaddr_in*, int);

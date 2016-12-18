@@ -19,7 +19,13 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\Source\m_sk.c" />
+    <ClCompile Include="..\Source\player.c" />
     <ClCompile Include="Server.c" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\Source\m_sk.h" />
+    <ClInclude Include="..\Source\player.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{D3642A9B-8ECF-4181-9FD8-933051F6CE40}</ProjectGuid>

@@ -80,10 +80,39 @@ void ControlThread(void * param){
 	Sleep(1000);
 	printf("close");
 	
-	shutdown(sk, 2);
+	shutdown(sk,2);
 	closesocket(sk);
 }
 
+void RecvThread(void *param) {
+
+	struct recv r = *(struct recv*) param;
+	struct playerData* player = r.player;
+	SOCKET sk = r.sk;
+
+	int reval;
+
+	char buf[BUF_SIZE];
+
+	reval = recvData(sk, buf, BUF_SIZE);
+
+	buf[reval] = '\0';
+
+	if (reval < 0) {
+
+		player->sk = -1;
+		printf("玩家[%s]斷線\n", player->ID);
+
+	}
+
+
+	if (strcmp(buf, SUCCESS_GET_DATA)) {
+		printf("玩家[%s]成功收到配對資料", player->ID);
+	}
+
+
+	closesocket(player->sk);
+}
 void AcceptThread(void * param){
 
 	SOCKET loc;
@@ -110,8 +139,9 @@ void AcceptThread(void * param){
 		
 		reval = acceptConnect(loc, &client, &addr);
 		recvData(client, buf, 15);//接收玩家ID
-		//測試shutdown之後client端會收到甚麼
+
 		printf("%d\n", reval);
+
 		if (reval != -1) {
 
 			playerData.addr = addr;
@@ -134,43 +164,11 @@ void AcceptThread(void * param){
 				
 				sendNetworkData(players);				
 				
-			}
-
-
-		
+			}	
 		}//if
 	}//while
 }
 
-void RecvThread(void *param) {
-
-	struct recv r= *(struct recv*) param;
-	struct playerData* player = r.player;
-	SOCKET sk = r.sk;
-	
-	int reval;
-
-	char buf[BUF_SIZE];
-			
-	reval = recvData(sk, buf, BUF_SIZE);
-
-	buf[reval] = '\0';
-
-	if (reval < 0) {
-			
-		player->sk = -1;
-		printf("玩家[%s]斷線\n", player->ID);
-			
-	}
-
-
-	if (strcmp(buf, SUCCESS_GET_DATA)) {
-		printf("玩家[%s]成功收到配對資料", player->ID);
-	}
-
-	
-	closesocket(player->sk);
-}
 
 
 void buildServer(SOCKET *sk) {
@@ -187,6 +185,7 @@ void buildServer(SOCKET *sk) {
 	cls();
 
 	Sleep(1000);
+
 	printf("建構伺服器中...");
 
 	reval = createServer(*sk, port, 3);
@@ -203,6 +202,8 @@ void buildServer(SOCKET *sk) {
 
 	
 	_beginthread(ControlThread, 0, sk);
+	_beginthread(RecvThread, 0, sk)
+	
 }
 
 void sendNetworkData(struct playerData* players) {

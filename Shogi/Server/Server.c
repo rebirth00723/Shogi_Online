@@ -67,8 +67,9 @@ int main() {
 
 void ControlThread(void * param){
 
+	SOCKET sk = *(SOCKET *)param;
 	char* cmd[4];
-	boolean *stop = (boolean *)param;
+	
 
 	while (1) {
 	
@@ -76,8 +77,11 @@ void ControlThread(void * param){
 		if (!strcmp(cmd, "quit"))
 			break;
 	}
-
-	*stop = true;
+	Sleep(1000);
+	printf("close");
+	
+	shutdown(sk, 2);
+	closesocket(sk);
 }
 
 void AcceptThread(void * param){
@@ -98,16 +102,16 @@ void AcceptThread(void * param){
 
 	stop = false;
 
-	buildServer(&loc, &stop);
+	buildServer(&loc);
 
 	printf("伺服器啟動完成，預關閉連線請鍵入quit，等待玩家連入...\n");
 
-	while ( ! stop) {
+	while (1) {
 		
 		reval = acceptConnect(loc, &client, &addr);
 		recvData(client, buf, 15);//接收玩家ID
-
-
+		//測試shutdown之後client端會收到甚麼
+		printf("%d\n", reval);
 		if (reval != -1) {
 
 			playerData.addr = addr;
@@ -169,7 +173,7 @@ void RecvThread(void *param) {
 }
 
 
-void buildServer(SOCKET *sk, boolean *stop) {
+void buildServer(SOCKET *sk) {
 
 	int port;
 	int reval;
@@ -197,7 +201,8 @@ void buildServer(SOCKET *sk, boolean *stop) {
 
 	cls();
 
-	_beginthread(ControlThread, 0, stop);
+	
+	_beginthread(ControlThread, 0, sk);
 }
 
 void sendNetworkData(struct playerData* players) {

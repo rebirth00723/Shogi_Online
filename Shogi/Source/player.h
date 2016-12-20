@@ -1,4 +1,4 @@
-#define ID_SIZE 15
+#define ID_SIZE 120
 #include <winsock.h>
 
 struct playerData {

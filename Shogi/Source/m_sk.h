@@ -17,7 +17,7 @@ int checkError(int, char*);
 void createAddr(struct sockaddr_in*, char*, int);
 void createAddrA(struct sockaddr_in*, int);
 int createServer(SOCKET sk, int port, int backlog);
-int connectServer(SOCKET, struct sockaddr_in, int);
+int connectServer(SOCKET, struct sockaddr_in);
 void getDataList(char* list, char* str);
 void getsocket(SOCKET *sk);
 int hasData(char*);

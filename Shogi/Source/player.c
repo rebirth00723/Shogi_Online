@@ -3,7 +3,7 @@
 
 struct playerData * addPlayer(struct playerData* players, struct playerData data) {
 
-	if (strlen(players[0].sk) == -1) {
+	if (players[0].sk == -1) {
 		players[0] = data;
 		return &players[0];
 	}

@@ -15,13 +15,6 @@ void RecvThread(void *);
 void buildServer(SOCKET *);
 void sendNetworkData(struct playerData *);
 
-struct recv {
-
-	SOCKET sk;
-	struct playerData* player;
-
-};
-
 
 
 int main() {
@@ -37,7 +30,7 @@ int main() {
 	int playerID;
 	printf("┌───────────────────┐\n");
 	printf("│　　　　　　　　　　　　　　　　　　　│\n");
-	printf("│　硨─傌─相─仕─帥─仕─相─傌─硨　│\n");
+	printf("│　\u4FE5─傌─相─仕─帥─仕─相─傌─硨　│\n");
 	printf("│　│　│　│　│╲│╱│　│　│　│　│\n");
 	printf("│　├─┼─┼─┼─┼─┼─┼─┼─┤　│\n");
 	printf("│　│　│　│　│╱│╲│　│　│　│　│\n");
@@ -65,15 +58,70 @@ int main() {
 	system("pause");
 }
 
+void AcceptThread(void * param) {
+
+	SOCKET loc;
+	SOCKET client;
+
+	struct sockaddr_in addr;
+	struct playerData players[2] = { {.sk = -1}, {.sk = -1} };
+	struct playerData player;
+	
+
+	char buf[ID_SIZE];
+	char ID[ID_SIZE];
+
+	int bytes;
+	int reval;
+
+
+	buildServer(&loc);
+
+	_beginthread(ControlThread, 0, &loc);
+
+	printf("伺服器啟動完成，預關閉連線請鍵入quit，等待玩家連入...\n");
+
+	while (1) {
+		
+		reval = acceptConnect(loc, &client, &addr);
+		printf("1");
+		if (reval != -1) {
+
+			reval = recvData(client, ID, ID_SIZE);//接收玩家ID
+
+			ID[reval] = '\0';
+
+			printf("玩家[%s]:連入，等待配對\n", ID);
+
+			player.addr = addr;
+			player.sk = client;
+			strcpy(player.ID, ID);
+
+			_beginthread(RecvThread, 0, addPlayer(players, player));
+
+			if (playerAmount == 2) {
+			
+				printf("配對 玩家[%s] : 玩家[&s]", players[0].ID, players[1].ID);
+
+				sendNetworkData(players);
+			
+			}
+		}
+		
+
+	}//while
+}
+
+
 void ControlThread(void * param){
 
 	SOCKET sk = *(SOCKET *)param;
-	char* cmd[4];
+	char cmd[120];
 	
 
 	while (1) {
 	
-		gets_s(cmd, sizeof(cmd));
+		scanf("%s", cmd);
 		if (!strcmp(cmd, "quit"))
 			break;
 	}
@@ -84,89 +132,39 @@ void ControlThread(void * param){
 	closesocket(sk);
 }
 
-void RecvThread(void *param) {
+void RecvThread(void *param) {//主要接收玩家是否有收到東西，或者是斷線
 
-	struct recv r = *(struct recv*) param;
-	struct playerData* player = r.player;
-	SOCKET sk = r.sk;
+	struct playerData *player = (struct playerData *) param;
+
+	SOCKET client = player->sk;
+
+	char* ID = player->ID;
+	char buf[BUF_SIZE];
 
 	int reval;
 
-	char buf[BUF_SIZE];
 
-	reval = recvData(sk, buf, BUF_SIZE);
+	reval = recvData(client, buf, BUF_SIZE);
 
 	buf[reval] = '\0';
 
+	printf("%d\n", reval);
+
 	if (reval < 0) {
 
-		player->sk = -1;
+		 
 		printf("玩家[%s]斷線\n", player->ID);
 
 	}
 
 
 	if (strcmp(buf, SUCCESS_GET_DATA)) {
-		printf("玩家[%s]成功收到配對資料", player->ID);
+		printf("玩家[%s]成功收到配對資料", ID);
 	}
 
+	closesocket(client);
 
-	closesocket(player->sk);
-}
-void AcceptThread(void * param){
-
-	SOCKET loc;
-	SOCKET client;
-
-	struct sockaddr_in addr;
-	struct playerData playerData;
-	struct playerData players[2];
-	struct recv rd;
-	char buf[ID_SIZE];
-	int bytes;
-	int reval;
-	int connecngti;
-
-	boolean stop;
-
-	stop = false;
-
-	buildServer(&loc);
-
-	printf("伺服器啟動完成，預關閉連線請鍵入quit，等待玩家連入...\n");
-
-	while (1) {
-		
-		reval = acceptConnect(loc, &client, &addr);
-		recvData(client, buf, 15);//接收玩家ID
-
-		printf("%d\n", reval);
-
-		if (reval != -1) {
-
-			playerData.addr = addr;
-			playerData.sk = loc;
-			strcpy(playerData.ID, buf);
-
-			
-
-			rd.player = addPlayer(players, playerData);;
-			rd.sk = client;
-
-			_beginthread(RecvThread, 0, &rd);
-
-			printf("玩家[%d]:連入，等待配對\n");
-			
-
-			if (playerAmount == 2) {
-				
-				printf("配對 玩家[%s] : 玩家[&s]", players[0].ID, players[1].ID);
-				
-				sendNetworkData(players);				
-				
-			}	
-		}//if
-	}//while
+	player->sk = -1;
 }
 
 
@@ -180,11 +178,13 @@ void buildServer(SOCKET *sk) {
 	getsocket(sk);
 
 	printf("建立伺服器，設定Port:");
-	scanf("%d", &port);
+
+	port = 123;
+	//scanf("%d", &port);
 
 	cls();
 
-	Sleep(1000);
+
 
 	printf("建構伺服器中...");
 
@@ -196,13 +196,10 @@ void buildServer(SOCKET *sk) {
 	}	
 	printf("成功\n");
 
-	Sleep(1000);
 
 	cls();
 
 	
-	_beginthread(ControlThread, 0, sk);
-	_beginthread(RecvThread, 0, sk)
 	
 }
 

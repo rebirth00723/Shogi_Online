@@ -1,7 +1,4 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <winsock.h>
-#include <stdbool.h>
+
 #include "m_sk.h"
 
 #define FILE_NOT_FOUND (HANDLE)0xFFFFFFFFF

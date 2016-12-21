@@ -6,7 +6,6 @@
 #include "..\Source\player.h"
 
 void ControlThread(void*);
-void WaitingMatchThread(void*);
 
 void login(SOCKET*, char*);
 void waitMatch(SOCKET);
@@ -26,7 +25,7 @@ int main() {
 
 	login(&sk, ID);
 
-	
+	waitMatch(sk);
 	
 	
 
@@ -67,17 +66,7 @@ int main() {
 void ControlThread(void *param) {
 
 }
-void WaitingMatchThread(void *param) {
 
-	SOCKET sk;
-	
-	
-	while (1) {
-		Sleep(1000);
-	}
-
-
-}
 void login(SOCKET *sk, char* ID) {
 
 	struct sockaddr_in addr;
@@ -133,3 +122,15 @@ void login(SOCKET *sk, char* ID) {
 	}
 }
 
+void waitMatch(SOCKET sk) {
+
+	char* buf[sizeof(struct userData)];
+	struct userData mate_addr;
+
+
+
+	recvData(sk, buf, sizeof(struct userData), 0);
+
+	
+
+}

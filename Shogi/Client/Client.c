@@ -9,12 +9,14 @@ void ControlThread(void*);
 void WaitingMatchThread(void*);
 
 void login(SOCKET*, char*);
-void waitMatch(SOCKET);
+struct userData waitMatch(SOCKET);
 
 int main() {
 
 	char ID[ID_SIZE];
 	SOCKET sk;
+
+	struct sockaddr_in match_addr;
 
 	WSADATA wsd;
 

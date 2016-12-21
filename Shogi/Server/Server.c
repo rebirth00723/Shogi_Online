@@ -77,7 +77,7 @@ void AcceptThread(void * param) {
 
 	buildServer(&loc);
 
-	_beginthread(ControlThread, 0, &loc);
+	_beginthread(ControlThread, 0, &loc);//Thread
 
 	printf("伺服器啟動完成，預關閉連線請鍵入quit，等待玩家連入...\n");
 
@@ -97,7 +97,7 @@ void AcceptThread(void * param) {
 			player.sk = client;
 			strcpy(player.ID, ID);
 
-			_beginthread(RecvThread, 0, addPlayer(players, player));
+			_beginthread(RecvThread, 0, addPlayer(players, player));//Thread
 
 			if (playerAmount == 2) {
 			

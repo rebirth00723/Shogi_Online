@@ -1,7 +1,4 @@
-﻿#include <stdio.h>
-#include <stdlib.h>
-#include <process.h>
-#include <winsock.h>
+﻿
 #include "../Source/m_sk.h"
 #include "../Source/player.h"
 
@@ -184,8 +181,6 @@ void buildServer(SOCKET *sk) {
 
 	cls();
 
-
-
 	printf("建構伺服器中...");
 
 	reval = createServer(*sk, port, 3);
@@ -198,9 +193,6 @@ void buildServer(SOCKET *sk) {
 
 
 	cls();
-
-	
-	
 }
 
 void sendNetworkData(struct playerData* players) {
@@ -225,6 +217,7 @@ void sendNetworkData(struct playerData* players) {
 		p2.addr = players[2].addr;//改改看!r
 		strcpy(p2.ID, players[2].ID);
 	}
+
 	p1.isServer = true;
 	p2.isServer = false;
 	memcpy(buf, &p1, sizeof(p1));

@@ -1,18 +1,25 @@
 #include <stdio.h>
 #include <stdbool.h>
+#include "piece.h"
 
-typedef struct shogi{
 
-	void(*print)(const bool);
+
+typedef struct{
+
+	int pos_b[16][2];
+	int pos_r[16][2];
+	void(*init)(const bool);
+	void(*print)(shogi);
+
 } shogi;
 
+shogi initShogi();
 
 void init(const bool first);
-void initShogi(shogi* s);
+
+int offset(int pos);
+
+void print(shogi);
 
 
 
-void initShogi(shogi *s) {
-
-	s->print = init;
-}

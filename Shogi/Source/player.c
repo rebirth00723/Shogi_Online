@@ -26,9 +26,9 @@ int playerAmount(struct playerData *players) {
 
 	int a = 0;
 
-	if (strlen(players[0].sk) < 0)
+	if (players[0].sk != -1)
 		a++;
-	if (strlen(players[1].sk) < 0)
+	if (players[1].sk != -1)
 		a++;
 
 	return a;

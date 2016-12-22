@@ -7,15 +7,22 @@
 
 void ControlThread(void*);
 
+
+void buildServer(SOCKET, int);
+void connectMate(SOCKET, struct userData, int);
 void login(SOCKET*, char*);
 struct userData waitMatch(SOCKET);
+
+
 
 int main() {
 
 	char ID[ID_SIZE];
 	SOCKET sk;
-
-	struct sockaddr_in match_addr;
+	int port;
+	int len = sizeof(struct sockaddr_in);
+	struct sockaddr_in loc_addr;
+	struct userData mate_data;
 
 	WSADATA wsd;
 
@@ -25,14 +32,38 @@ int main() {
 		return;
 	}
 
+
 	login(&sk, ID);
 
-	waitMatch(sk);
-	
-	
+	getsockname(sk, (struct sockaddr*)& loc_addr, &len);
 
-	ps();
+	port = ntohs(loc_addr.sin_port);
 
+	printf("%d\n", port);
+
+	mate_data = waitMatch(sk);
+	
+	closesocket(sk);
+	
+	getsocket(&sk);
+
+	if (mate_data.length == -1) {
+		printf("Server斷線，無法配對，正在關閉程式...");
+		ps();
+		exit(-1);
+	}
+	else {
+		printf("配對成功，收到對戰者資訊...\n");
+		printf("對手名子: %s\n", mate_data.ID);
+		printf("對手PORT: %d\n", ntohs(mate_data.addr.sin_port));
+		
+	}
+	
+	connectMate(&sk, mate_data, port);
+	while (1) {
+
+		Sleep(100);
+	}
 	/*WSADATA wsd;
 
 	if (WSAStartup(MAKEWORD(2, 2), &wsd) != 0)
@@ -66,6 +97,56 @@ int main() {
 
 
 void ControlThread(void *param) {
+
+}
+
+void buildServer(SOCKET* sk, int port){
+	
+
+	int reval;
+
+	printf("建構伺服器中...");
+
+	reval = createServer(*sk, port, 1);
+	if (reval == -1) {
+		printf("失敗\n");
+		ps();
+		exit(-1);
+	}
+	printf("等待對手連入\n");
+	
+
+}
+
+void connectMate(SOCKET* sk, struct userData mate_data, int port)
+{
+	SOCKET mate;
+	struct sockaddr_in mate_addr;
+	int reval;
+
+	if (mate_data.isServer) {
+	
+
+		buildServer(sk , port);
+
+		reval =	acceptConnect(*sk, &mate, &mate_addr);
+
+	}
+	else{
+
+		reval = connectServer(*sk, mate_data.addr);
+	}
+
+	if (reval == -1) {
+	
+		printf("連接對手失敗，無法進行對戰...\n");
+	}
+	else {
+	
+		printf("開始對戰...\n");
+	}
+
+
 
 }
 
@@ -124,15 +205,19 @@ void login(SOCKET *sk, char* ID) {
 	}
 }
 
-void waitMatch(SOCKET sk) {
+struct userData waitMatch(SOCKET sk) {
 
 	char* buf[sizeof(struct userData)];
-	struct userData mate_addr;
+	struct userData ud = {.length = -1};
+	int reval; 
 
+	reval = recvData(sk, buf, sizeof(struct userData), 0);
 
+	if (reval > 0) {
 
-	recvData(sk, buf, sizeof(struct userData), 0);
+		memcpy(&ud, buf, sizeof(struct userData));
 
-	
-
+		ud.ID[ud.length] = '\0';
+	}
+	return ud;
 }

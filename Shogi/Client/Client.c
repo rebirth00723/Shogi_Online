@@ -2,22 +2,31 @@
 #include <stdlib.h>
 #include <process.h>
 #include <winsock.h>
+#include "..\Source\shogi.h"
 #include "..\Source\m_sk.h"
 #include "..\Source\player.h"
 
 void ControlThread(void*);
 
 
-void buildServer(SOCKET, int);
-void connectMate(SOCKET, struct userData, int);
+void buildServer(SOCKET*, int);
+void connectMate(SOCKET*, struct userData, int);
 void login(SOCKET*, char*);
 struct userData waitMatch(SOCKET);
 
+void test() {
 
+	shogi s = initShogi(1);
+
+	s.print(s);
+	system("pause");
+}
 
 int main() {
 
-	char ID[ID_SIZE];
+	test();
+
+	/*char ID[ID_SIZE];
 	SOCKET sk;
 	int port;
 	int len = sizeof(struct sockaddr_in);
@@ -47,6 +56,7 @@ int main() {
 	
 	getsocket(&sk);
 
+
 	if (mate_data.length == -1) {
 		printf("Server斷線，無法配對，正在關閉程式...");
 		ps();
@@ -63,7 +73,9 @@ int main() {
 	while (1) {
 
 		Sleep(100);
-	}
+	}*/
+
+
 	/*WSADATA wsd;
 
 	if (WSAStartup(MAKEWORD(2, 2), &wsd) != 0)
@@ -154,7 +166,7 @@ void login(SOCKET *sk, char* ID) {
 
 	struct sockaddr_in addr;
 
-	char* ip[30];
+	char* ip;
 	int port;
 	int reval;
 
@@ -177,7 +189,7 @@ void login(SOCKET *sk, char* ID) {
 		printf("IP:");
 		
 		//scanf("%s", ip);
-		strcpy(ip, "127.0.0.1");
+		ip = "127.0.0.1";
 
 		printf("Port:");
 
@@ -211,7 +223,7 @@ struct userData waitMatch(SOCKET sk) {
 	struct userData ud = {.length = -1};
 	int reval; 
 
-	reval = recvData(sk, buf, sizeof(struct userData), 0);
+	reval = recvData(sk, buf, sizeof(struct userData));
 
 	if (reval > 0) {
 

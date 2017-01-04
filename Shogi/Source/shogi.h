@@ -9,8 +9,7 @@
 
 typedef struct _tagShogi{
 
-	POS pos_b[16];//[16]:´Ñ¤l [2]:®y¼Ð
-	POS pos_r[16];
+	POS pos[2][16];//[16]:´Ñs
 	int  isblack;
 	void(*print)(struct _tagShogi);
 

@@ -18,15 +18,24 @@
     <ClCompile Include="..\Client\Client.c">
       <Filter>原始程式檔</Filter>
     </ClCompile>
+    <ClCompile Include="..\Source\piece.c">
+      <Filter>資源檔</Filter>
+    </ClCompile>
     <ClCompile Include="..\Source\m_sk.c">
       <Filter>資源檔</Filter>
     </ClCompile>
-    <ClCompile Include="..\Source\player.c">
+    <ClCompile Include="..\Source\shogi.c">
       <Filter>資源檔</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Source\m_sk.h">
+      <Filter>標頭檔</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\shogi.h">
+      <Filter>標頭檔</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\piece.h">
       <Filter>標頭檔</Filter>
     </ClInclude>
     <ClInclude Include="..\Source\player.h">

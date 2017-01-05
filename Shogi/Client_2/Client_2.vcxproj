@@ -19,7 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{53388323-A514-44E6-86F4-EBD542429897}</ProjectGuid>
+    <ProjectGuid>{95C1377B-620C-4302-97AA-AC72FB7E6717}</ProjectGuid>
     <RootNamespace>Client_2</RootNamespace>
     <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
   </PropertyGroup>
@@ -112,11 +112,14 @@
   <ItemGroup>
     <ClCompile Include="..\Client\Client.c" />
     <ClCompile Include="..\Source\m_sk.c" />
-    <ClCompile Include="..\Source\player.c" />
+    <ClCompile Include="..\Source\piece.c" />
+    <ClCompile Include="..\Source\shogi.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Source\m_sk.h" />
+    <ClInclude Include="..\Source\piece.h" />
     <ClInclude Include="..\Source\player.h" />
+    <ClInclude Include="..\Source\shogi.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -16,7 +16,7 @@ struct userData waitMatch(SOCKET);
 
 void test() {
 
-	shogi s = initShogi(1);
+	shogi s = initShogi(0);
 
 	s.print(s);
 	system("pause");
@@ -24,9 +24,8 @@ void test() {
 
 int main() {
 
-	test();
 
-	/*char ID[ID_SIZE];
+	char ID[ID_SIZE];
 	SOCKET sk;
 	int port;
 	int len = sizeof(struct sockaddr_in);
@@ -67,13 +66,27 @@ int main() {
 		printf("對手名子: %s\n", mate_data.ID);
 		printf("對手PORT: %d\n", ntohs(mate_data.addr.sin_port));
 		
+		
+	}
+
+	connectMate(&sk, mate_data, port);
+
+	ps();
+	shogi s = initShogi(mate_data.isServer);
+
+	while (1) {
+
+		s.print(s);
+		
+
+
 	}
 	
-	connectMate(&sk, mate_data, port);
+
 	while (1) {
 
 		Sleep(100);
-	}*/
+	}
 
 
 	/*WSADATA wsd;

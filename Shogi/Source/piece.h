@@ -12,7 +12,7 @@ typedef struct {
 } POS;
 
 void getPiece(int, char*, int color);
-void getPiece_pos(POS*, int color);
+void getPiece_pos(POS*);
 void getPiece_board_default(char**);
 void getPiece_board_empty(char[25][48]);
 #endif

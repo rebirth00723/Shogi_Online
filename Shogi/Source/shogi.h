@@ -9,7 +9,7 @@
 
 typedef struct _tagShogi{
 
-	POS pos[2][16];//[16]:棋s
+	POS pos[2][16];//0 : 自己 1 :別人
 	int  isblack;
 	void(*print)(struct _tagShogi);
 

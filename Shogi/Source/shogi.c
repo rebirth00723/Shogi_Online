@@ -1,5 +1,15 @@
 #include "shogi.h"	
 #include "math.h"
+int checkNoPiece(shogi s, POS pos)
+{
+
+	for (int j = 0; j < PIECE_AMOUNT; j++)
+		
+		if (s.pos[1][j].x == pos.x && s.pos[1][j].y == pos.y) 
+			return 0;
+
+	return 1;
+}
 shogi initShogi(int isblack) {
 	shogi s;
 
@@ -14,29 +24,55 @@ shogi initShogi(int isblack) {
 	return s;
 }
 
+void kill(shogi * s, POS pos)
+{
+	for (int i = 0; i < PIECE_AMOUNT; i++) {
+		if (s->pos[0][i].x == pos.x && s->pos[0][i].y == pos.y) {
+			s->pos[0][i].x = -1;
+			s->pos[0][i].y = -1;
+		}
+	}
+
+}
+
 int  move(shogi* s, int id, int x, int y)
 {
 	POS pos = s->pos[1][id];
 	POS pos2 = { x, y };
 	int val = 0;
 
-	if (id == 0)
-		val = gerneral(*s, pos, x, y);
-	else if (id < 3)
-		val = knight(*s, pos, x, y);
-	else if (id < 5)
-		val = elephant(*s, pos, x, y);
-	else if (id < 7)
-		val = car(*s, pos, x, y);
-	else if (id < 9)
-		val = horse(*s, pos, x, y);
-	else if (id < 11)
-		val = cannon(*s, pos, x, y);
-	else
-		val = soldier(*s, pos, x, y);
+	if (x > 9 || x < 0 || y < 0 || y > 8)//超越框架
+		return 0;
 
-	if (val == 1) 
+	if (s->pos[1][id].x == x && s->pos[1][id].y == y)//沒有移動
+		return 0;
+
+	val = checkNoPiece(*s, pos2);//移動點沒有我方旗子
+
+	if (val == 0)
+		return 0;
+
+	if (id == 0)
+		val = gerneral(*s, pos, pos2);
+	else if (id < 3)
+		val = knight(*s, pos, pos2);
+	else if (id < 5)
+		val = elephant(*s, pos, pos2);
+	else if (id < 7)
+		val = car(*s, pos, pos2);
+	else if (id < 9)
+		val = horse(*s, pos, pos2);
+	else if (id < 11)
+		val = cannon(*s, pos, pos2);
+	else
+		val = soldier(*s, pos, pos2);
+
+	if (val == 1) {
+
+		kill(s, pos2);
 		s->pos[1][id] = pos2;
+	}
+		
 	
 	
 	return val;
@@ -62,17 +98,17 @@ void print(shogi s) {
 		x = offset(9 - s.pos[0][i].x);
 		y = offset(s.pos[0][i].y) * 2;
 	
+		if (X != -1 || Y != -1) {
+			getPiece(i, str, s.isblack);
+			_board[X][Y] = str[0];
+			_board[X][Y + 1] = str[1];
+		}
 
-		getPiece(i, str, s.isblack);
-
-
-		_board[X][Y] = str[0];
-		_board[X][Y + 1] = str[1];
-
-		getPiece(i, str, ! s.isblack);
-
-		_board[x][y] = str[0];
-		_board[x][y + 1] = str[1];
+		if (x != -1 || y != -1) {
+			getPiece(i, str, !s.isblack);
+			_board[x][y] = str[0];
+			_board[x][y + 1] = str[1];
+		}
 	}
 
 	for (int i = 0; i < sizeof(_board) / (sizeof(*_board)); i++)
@@ -117,45 +153,147 @@ void showSurvive(shogi s)
 	printf("\n");
 }
 
-int gerneral(shogi s, POS pos, int x, int y)
+int gerneral(shogi s, POS pos, POS pos2)
 {
+	int x = pos2.x;
+	int y = pos2.y;
+
 	if (y < 3 || y>5 || x > 9 || x < 7)
 		return 0;
-	else {
-		if (abs(pos.x - x) == 1 && pos.y == y)
-			return 1;
-		if (abs(pos.y - y) == 1 && pos.x == x)
-			return 1;
+
+	if ((	abs(pos.x - x) == 1 && pos.y == y)
+	|| (	abs(pos.y - y) == 1 && pos.x == x))
+		return 1;
+		
+	return 0;
+}
+
+int knight(shogi s, POS pos, POS pos2)
+{
+	int x = pos2.x;
+	int y = pos2.y;
+	
+	if (y < 3 || y>5 || x > 9 || x < 7)
+		return 0;
+
+	if (abs(pos.x - x) == 1 && abs(pos.y - y) == 1)
+		return 1;
+
+	return 0;
+}
+
+int elephant(shogi s, POS pos, POS pos2)
+{
+	int x = pos2.x;
+	int y = pos2.y;
+
+	if (abs(pos.x - x) == 2 && abs(pos.y - 2) == 1)
+		return 1;
+
+	return 0;
+}
+
+int car(shogi s, POS pos, POS pos2)
+{
+	int x = pos2.x;
+	int y = pos2.y;
+
+	if (pos.x == x || pos.y == y) { // 一次只能動一個座標\
+
+		if (pos.x == x) {//橫著走
+			for(int j = 0 ; j < 2 ; j++)//全部旗子
+				for (int i = 0; i < PIECE_AMOUNT; i++) {
+			
+					if (s.pos[j][i].x == x && (s.pos[j][i].y < y && s.pos[j][i].y > pos.y)) 
+						return 0;
+			}
+		}
+		else {//直著走
+			for (int j = 0; j < 2; j++)//全部旗子
+				for (int i = 0; i < PIECE_AMOUNT; i++) {
+
+					if (s.pos[j][i].y == y && (s.pos[j][i].x < x && s.pos[j][i].x > pos.x))
+						return 0;
+				}
+		
+		
+		
+		}
+		return 1;
+	
 	}
 	return 0;
 }
 
-int knight(shogi s, POS pos, int x, int y)
+int horse(shogi s, POS pos, POS pos2)
 {
+	int x = pos2.x;
+	int y = pos2.y;
+
+	if ((abs(pos.x - x) == 2 && abs(pos.y - y) == 1)
+		|| (abs(pos.x - x) == 1 && abs(pos.y - y) == 2)) 
+		return 1;
+	
 	return 0;
 }
 
-int elephant(shogi s, POS pos, int x, int y)
+int soldier(shogi s, POS pos, POS pos2)
 {
+	int x = pos2.x;
+	int y = pos2.y;
+
+	if (x - pos.x == 1 && pos.y == y)
+		return 1;
+
+	if(pos.x < 5)//已在對岸
+		if (pos.x == x && abs(pos.y - y) == 1)
+			return 1;
+
 	return 0;
 }
 
-int car(shogi s, POS pos, int x, int y)
+int cannon(shogi s, POS pos, POS pos2)
 {
+	int x = pos2.x;
+	int y = pos2.y;
+
+	int Obstacle = 0;
+
+	if (pos.x == x || pos.y == y) { // 一次只能動一個座標\
+
+		if (pos.x == x) {//橫著走
+			for (int j = 0; j < 2; j++)//全部旗子
+				for (int i = 0; i < PIECE_AMOUNT; i++) {
+
+					if (s.pos[j][i].x == x && (s.pos[j][i].y < y && s.pos[j][i].y > pos.y)) {
+						i++;
+						if (i > 1)
+							return 0;
+					}
+						
+				}
+		}
+		else {//直著走
+			for (int j = 0; j < 2; j++)//全部旗子
+				for (int i = 0; i < PIECE_AMOUNT; i++) {
+
+					if (s.pos[j][i].y == y && (s.pos[j][i].x < x && s.pos[j][i].x > pos.x)) {
+						i++;
+						if (i > 1)
+							return 0;
+					}
+				}
+
+
+
+		}
+		return 1;
+
+	}
 	return 0;
 }
 
-int horse(shogi s, POS pos, int x, int y)
-{
-	return 0;
-}
-
-int soldier(shogi s, POS pos, int x, int y)
-{
-	return 0;
-}
-
-int cannon(shogi s, POS pos, int x, int y)
+int noObstacle(shogi s, POS pos, POS pos2)
 {
 	return 0;
 }

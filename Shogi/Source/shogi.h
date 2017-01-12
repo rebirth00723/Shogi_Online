@@ -16,25 +16,29 @@ typedef struct _tagShogi{
 	int		(*move)			(struct _tagShogi*, int, int, int);
 
 } shogi;
+int		checkNoPiece(shogi s, POS pos);
+shogi	initShogi(int isblack);
 
-shogi initShogi(int isblack);
+void		kill(shogi* s, POS pos);
 
-int move(shogi* s, int id, int x, int y);
+int		move(shogi* s, int id, int x, int y);
 
-int offset(int pos);
+int		offset(int pos);
 
-void print(shogi);
+void	print(shogi);
 
-void showSurvive(shogi);
+void	showSurvive(shogi);
 
 //success: 1
-int gerneral	(shogi s, POS pos, int x, int y);
-int knight		(shogi s, POS pos, int x, int y);
-int elephant	(shogi s, POS pos, int x, int y);
-int car			(shogi s, POS pos, int x, int y);
-int horse		(shogi s, POS pos, int x, int y);
-int soldier		(shogi s, POS pos, int x, int y);
-int cannon		(shogi s, POS pos, int x, int y);
+int gerneral	(shogi s, POS pos, POS pos2);
+int knight		(shogi s, POS pos, POS pos2);
+int elephant	(shogi s, POS pos, POS pos2);
+int car			(shogi s, POS pos, POS pos2);
+int horse		(shogi s, POS pos, POS pos2);
+int soldier		(shogi s, POS pos, POS pos2);
+int cannon		(shogi s, POS pos, POS pos2);
+
+int noObstacle(shogi s, POS pos, POS pos2);
 #endif // !SHOGI_H
 
 

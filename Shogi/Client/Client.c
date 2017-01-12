@@ -322,8 +322,10 @@ void login(SOCKET *sk, char* ID) {
 void pressPiece(shogi s, struct userData mate_data, SOCKET sk)
 {
 	if (s.isblack == 1) {
-
-		Apress(s, mate_data, sk);
+		while (1) {
+			Apress(s, mate_data, sk);
+		}
+		
 		Brefresh(s, mate_data, sk);
 		Sleep(100000);
 	}

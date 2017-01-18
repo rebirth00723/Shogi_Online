@@ -19,7 +19,7 @@ typedef struct _tagShogi{
 int		checkNoPiece(shogi s, POS pos);
 shogi	initShogi(int isblack);
 
-void		kill(shogi* s, POS pos);
+void	kill(shogi* s, POS pos);
 
 int		move(shogi* s, int id, int x, int y);
 

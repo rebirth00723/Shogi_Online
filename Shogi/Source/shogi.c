@@ -1,11 +1,14 @@
 #include "shogi.h"	
 #include "math.h"
+#include "windows.h"
+
+
 int checkNoPiece(shogi s, POS pos)
 {
 
 	for (int j = 0; j < PIECE_AMOUNT; j++)
 		
-		if (s.pos[1][j].x == pos.x && s.pos[1][j].y == pos.y) 
+		if ((s.pos[1][j].x == pos.x) && (s.pos[1][j].y == pos.y)) 
 			return 0;
 
 	return 1;
@@ -204,16 +207,25 @@ int car(shogi s, POS pos, POS pos2)
 			for(int j = 0 ; j < 2 ; j++)//全部旗子
 				for (int i = 0; i < PIECE_AMOUNT; i++) {
 			
-					if (s.pos[j][i].x == x && (s.pos[j][i].y < y && s.pos[j][i].y > pos.y)) 
-						return 0;
+					if ((y - pos.y) > 0) {
+						if (s.pos[j][i].x == x && (s.pos[j][i].y < y && s.pos[j][i].y > pos.y))
+							return 0;
+					}
+					else
+						if (s.pos[j][i].x == x && (s.pos[j][i].y > y && s.pos[j][i].y < pos.y))
+							return 0;
 			}
 		}
 		else {//直著走
 			for (int j = 0; j < 2; j++)//全部旗子
 				for (int i = 0; i < PIECE_AMOUNT; i++) {
-
-					if (s.pos[j][i].y == y && (s.pos[j][i].x < x && s.pos[j][i].x > pos.x))
-						return 0;
+					if ((x - pos.x) > 0) {
+						if (s.pos[j][i].y == y && (s.pos[j][i].x < x && s.pos[j][i].x > pos.x))
+							return 0;
+					}
+					else
+						if (s.pos[j][i].y == y && (s.pos[j][i].x > x && s.pos[j][i].x < pos.x))
+							return 0;
 				}
 		
 		
@@ -259,6 +271,12 @@ int cannon(shogi s, POS pos, POS pos2)
 
 	int Obstacle = 0;
 
+	//沒打中敵人都不行
+	for (int i = 0; i < PIECE_AMOUNT; i++)
+		if (!((s.pos[0][i].x == x) && (s.pos[0][i].y == y)))
+			return 0;
+
+
 	if (pos.x == x || pos.y == y) { // 一次只能動一個座標\
 
 		if (pos.x == x) {//橫著走
@@ -266,10 +284,11 @@ int cannon(shogi s, POS pos, POS pos2)
 				for (int i = 0; i < PIECE_AMOUNT; i++) {
 
 					if (s.pos[j][i].x == x && (s.pos[j][i].y < y && s.pos[j][i].y > pos.y)) {
-						i++;
-						if (i > 1)
+						Obstacle++;
+						if (Obstacle > 1)
 							return 0;
 					}
+					
 						
 				}
 		}
@@ -278,8 +297,8 @@ int cannon(shogi s, POS pos, POS pos2)
 				for (int i = 0; i < PIECE_AMOUNT; i++) {
 
 					if (s.pos[j][i].y == y && (s.pos[j][i].x < x && s.pos[j][i].x > pos.x)) {
-						i++;
-						if (i > 1)
+						Obstacle++;
+						if (Obstacle > 1)
 							return 0;
 					}
 				}

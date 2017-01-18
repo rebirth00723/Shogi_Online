@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <process.h>
 #include <winsock.h>
+#include <windows.h>
 #include "..\Source\shogi.h"
 #include "..\Source\m_sk.h"
 #include "..\Source\player.h"
@@ -13,15 +14,18 @@ typedef struct {
 	int y;
 
 }CHANGE;
+int  choose();
 
 void ControlThread(void*);
 
-void Apress(shogi s, struct userData mate_data, SOCKET sk);
-void Brefresh(shogi s, struct userData mate_data, SOCKET sk);
+void Apress(shogi *s, struct userData mate_data, SOCKET sk);
+void Brefresh(shogi *s, struct userData mate_data, SOCKET sk);
 void buildServer(SOCKET*, int);
+
 void connectMate(SOCKET*, struct userData, int);
+void gotoxy(int, int);
 void login(SOCKET*, char*);
-void pressPiece(shogi s, struct userData mate_data, SOCKET sk);
+void pressPiece(shogi *s, struct userData mate_data, SOCKET sk);
 
 struct userData waitMatch(SOCKET);
 
@@ -81,7 +85,7 @@ int main() {
 			printf("你是紅色\n");
 		s.print(s);
 	
-		pressPiece(s, mate_data, sk);
+		pressPiece(&s, mate_data, sk);
 
 	
 
@@ -124,12 +128,55 @@ int main() {
 }
 
 
+int choose()
+{
+	HANDLE handle;
+	DWORD cnt;//儲存出入
+	DWORD mode;//Console Mode
+	INPUT_RECORD input;
+	int x = 0, y = 0;
+	POS start = { -1,-1 };
+	POS end = { -1,-1 };
+	handle = GetStdHandle(STD_INPUT_HANDLE);//先取得基本輸入Handle
+	GetConsoleMode(handle, &mode);//得到基本輸入的Mode
+	SetConsoleMode(handle, mode & ~ENABLE_LINE_INPUT);//設定基本輸入模式，其中~ENABLE_LINE_INPUT代表不用按下Enter也可動作
+
+	gotoxy(9, 9);//預計設定好案件
+
+	while (ReadConsoleInput(handle, &input, 1, &cnt))//開始讀取使用者的動作
+	{
+		if (input.EventType == KEY_EVENT)
+		{
+			if (input.Event.KeyEvent.bKeyDown == TRUE)
+			{
+				if (input.Event.KeyEvent.wVirtualKeyCode == VK_SPACE)//space
+					if (start.x == -1) {
+						start.x = x;
+						start.y = y;
+					}
+					else {
+						end.x = x;
+						end.y = y;
+					}
+
+				else if (input.Event.KeyEvent.wVirtualKeyCode == VK_ESCAPE)//Esc
+					printf("Esc\n");
+				else if (input.Event.KeyEvent.wVirtualKeyCode == VK_LEFT)//left
+				else if (input.Event.KeyEvent.wVirtualKeyCode == VK_RIGHT)//right
+				else if (input.Event.KeyEvent.wVirtualKeyCode == VK_UP)//up
+				else if (input.Event.KeyEvent.wVirtualKeyCode == VK_DOWN)//down
+			}
+		}
+	}
+	return 0;
+}
+
 void ControlThread(void *param) {
 
 }
 
 
-void Apress(shogi s, struct userData mate_data, SOCKET sk)
+void Apress(shogi *s, struct userData mate_data, SOCKET sk)
 {
 
 	int id = 0;
@@ -140,20 +187,23 @@ void Apress(shogi s, struct userData mate_data, SOCKET sk)
 
 	while (lock) {
 
-		s.showSurvive(s);
+
+		
+
+		s->showSurvive(*s);
 		printf("\n輸入棋子編號:");
 		scanf("%d", &id);
 		getchar();
 		if (id < 0 || id >16) {
 			cls();
-			s.print(s);
+			s->print(*s);
 			printf("\n輸入錯誤, 重新輸入...\n");
 			continue;
 		}
 
-		if (s.pos[1][id].x == -1) {
+		if (s->pos[1][id].x == -1) {
 			cls();
-			s.print(s);
+			s->print(*s);
 			printf("\n該棋子已陣亡, 重新輸入...\n");
 			continue;
 		
@@ -162,7 +212,7 @@ void Apress(shogi s, struct userData mate_data, SOCKET sk)
 		
 		lock = 0;
 		cls();
-		s.print(s);
+		s->print(*s);
 		while (1) {
 
 			int val;
@@ -170,35 +220,36 @@ void Apress(shogi s, struct userData mate_data, SOCKET sk)
 			int y = 0;
 			char piece[2];
 			
-			getPiece(id, piece, s.isblack);
+			getPiece(id, piece, s->isblack);
 
-			printf("\n您目前選擇的棋子 %c%c(%c,%d) \n", piece[0], piece[1], 'A'  + s.pos[1][id].x, s.pos[1][id].y);
+			printf("\n您目前選擇的棋子 %c%c(%c,%d) \n", piece[0], piece[1], 'A'  + s->pos[1][id].x, s->pos[1][id].y);
 			printf("輸入移動座標 ex: J 6 (重新選擇輸入 0 0):");
 			scanf("%c %d", &x, &y);
 			getchar();
 			if ( x == '0' && y == 0) {
 				cls();
-				s.print(s);
+				s->print(*s);
 				printf("\n重新選擇棋子\n\n");
 				lock = 1;
 				break;
 			}
 			if (x < 'A' || x> 'J' || y < 0 || y>9) {
 				cls();
-				s.print(s);
+				s->print(*s);
 				printf("\n輸入錯誤，重新輸入...\n");
 				continue;
 			}
-			val = s.move(&s, id, x-'A', y);
+
+			val = s->move(s, id, x-'A', y);
 
 			if (val == 0) {
 				cls();
-				s.print(s);
+				s->print(*s);
 				printf("\n移動失敗，重新移動...\n");
 				continue;
 			}
 			cls();
-			s.print(s);
+			s->print(*s);
 
 			break;
 		}
@@ -206,7 +257,7 @@ void Apress(shogi s, struct userData mate_data, SOCKET sk)
 
 }
 
-void Brefresh(shogi s, struct userData mate_data, SOCKET sk)
+void Brefresh(shogi *s, struct userData mate_data, SOCKET sk)
 {
 	printf("等待對方下棋\n");
 
@@ -263,6 +314,14 @@ void connectMate(SOCKET* sk, struct userData mate_data, int port)
 
 
 }
+void gotoxy(int xpos, int ypos)
+{
+	COORD scrn;
+	HANDLE hOuput = GetStdHandle(STD_OUTPUT_HANDLE);
+	scrn.X = xpos; scrn.Y = ypos;
+	SetConsoleCursorPosition(hOuput, scrn);
+} //接著輸入這個函式,這樣就可以在其他函式使用了
+
 
 void login(SOCKET *sk, char* ID) {
 
@@ -319,9 +378,9 @@ void login(SOCKET *sk, char* ID) {
 	}
 }
 
-void pressPiece(shogi s, struct userData mate_data, SOCKET sk)
+void pressPiece(shogi *s, struct userData mate_data, SOCKET sk)
 {
-	if (s.isblack == 1) {
+	if (s->isblack == 1) {
 		while (1) {
 			Apress(s, mate_data, sk);
 		}
@@ -330,8 +389,11 @@ void pressPiece(shogi s, struct userData mate_data, SOCKET sk)
 		Sleep(100000);
 	}
 	else {
+		while (1) {
+			Apress(s, mate_data, sk);
+		}
+
 		Brefresh(s, mate_data, sk);
-		Apress(s, mate_data, sk);
 		Sleep(100000);
 	}
 }

@@ -14,7 +14,7 @@ typedef struct {
 	int y;
 
 }CHANGE;
-int  choose();
+struct sending choose(shogi *s);
 
 void ControlThread(void*);
 
@@ -22,10 +22,10 @@ void Apress(shogi *s, struct userData mate_data, SOCKET sk);
 void Brefresh(shogi *s, struct userData mate_data, SOCKET sk);
 void buildServer(SOCKET*, int);
 
-void connectMate(SOCKET*, struct userData, int);
+void connectMate(SOCKET*, struct userData, int, SOCKET*);
 void gotoxy(int, int);
 void login(SOCKET*, char*);
-void pressPiece(shogi *s, struct userData mate_data, SOCKET sk);
+void pressPiece(shogi *s, struct userData mate_data, SOCKET sk, SOCKET mate);
 
 struct userData waitMatch(SOCKET);
 
@@ -42,6 +42,7 @@ int main() {
 
 	char ID[ID_SIZE];
 	SOCKET sk;
+	SOCKET mate;
 	int port;
 	int len = sizeof(struct sockaddr_in);
 	struct sockaddr_in loc_addr;
@@ -71,27 +72,17 @@ int main() {
 	getsocket(&sk);
 
 
-	connectMate(&sk, mate_data, port);
+	connectMate(&sk, mate_data, port, &mate);
 
 	Sleep(500);
 	cls();
 
 	shogi s = initShogi(mate_data.isServer);
 
-	while (1) {
 
-		s.print(s);
-	
-		pressPiece(&s, mate_data, sk);
+	pressPiece(&s, mate_data, sk, mate);
 
-	
-
-
-
-
-	}
-	
-
+	system("pause");
 	
 	/*WSADATA wsd;
 
@@ -125,20 +116,23 @@ int main() {
 }
 
 
-int choose()
+struct sending choose(shogi *s)
 {
 	HANDLE handle;
 	DWORD cnt;//儲存出入
 	DWORD mode;//Console Mode
 	INPUT_RECORD input;
-	int x = 0, y = 0;
-	POS start = { -1,-1 };
-	POS end = { -1,-1 };
+	int x = 0, y = 9;
+	int id;
+	int isSelect = 0;
+	struct sending S;
 	handle = GetStdHandle(STD_INPUT_HANDLE);//先取得基本輸入Handle
 	GetConsoleMode(handle, &mode);//得到基本輸入的Mode
 	SetConsoleMode(handle, mode & ~ENABLE_LINE_INPUT);//設定基本輸入模式，其中~ENABLE_LINE_INPUT代表不用按下Enter也可動作
-
-	gotoxy(0, 0);//預計設定好案件
+	cls();
+	s->print(*s);
+	printf("請下棋\n");
+	gotoxy(0, 9);//預計設定好案件
 
 	while (ReadConsoleInput(handle, &input, 1, &cnt))//開始讀取使用者的動作
 	{
@@ -146,32 +140,77 @@ int choose()
 		{
 			if (input.Event.KeyEvent.bKeyDown == TRUE)
 			{
+				
 				if (input.Event.KeyEvent.wVirtualKeyCode == VK_SPACE)//space
-					if (start.x == -1) {
-						start.x = x;
-						start.y = y;
+					if (isSelect == 0) {
+						
+						for (int i = 0; i < PIECE_AMOUNT; i++) {
+							
+							if (s->pos[1][i].x == y && s->pos[1][i].y == x) {
+								isSelect = 1;
+								id = i;
+								cls();
+								s->print(*s);
+								char* c = getPiecer(i, s->isblack);
+								printf("你選擇了 [ %c%c ]!!!\n", c[0], c[1]);
+								break;
+							}
+						}
+						if (!isSelect) {
+							cls();
+							s->print(*s);
+							printf("選擇錯誤...請重新選擇!!!\n");
+							continue;
+						}
 					}
 					else {
-						end.x = x;
-						end.y = y;
-						break;
+						int val;
+						val = move(s, id, y, x, &S);
+						if (!val) {
+							cls();
+							s->print(*s);
+							printf("移動失敗...請重新移動!!!\n");
+							continue;
+						}
+						else {
+							return S;
+							
+						}
+							
 					}
 
-				else if (input.Event.KeyEvent.wVirtualKeyCode == VK_ESCAPE)//Esc
-					start.x = -1;
-				else if (input.Event.KeyEvent.wVirtualKeyCode == VK_LEFT)//left
+				else if (input.Event.KeyEvent.wVirtualKeyCode == VK_ESCAPE) {
+					if (isSelect) {
+						isSelect = 0;
+						cls();
+						s->print(*s);
+						printf("重新選擇棋子!!!\n");
+					}
+				}
+				else if (input.Event.KeyEvent.wVirtualKeyCode == VK_LEFT) {//left
 					x--;
-				else if (input.Event.KeyEvent.wVirtualKeyCode == VK_RIGHT)//right
+					if (x < 0) x = 0;
+						
+				}
+				else if (input.Event.KeyEvent.wVirtualKeyCode == VK_RIGHT) {
 					x++;
-				else if (input.Event.KeyEvent.wVirtualKeyCode == VK_UP)//up
+					if (x > 8) x = 8;
+				}//right
+					
+				else if (input.Event.KeyEvent.wVirtualKeyCode == VK_UP) {//up
 					y--;
-				else if (input.Event.KeyEvent.wVirtualKeyCode == VK_DOWN)//down
+					if (y < 0) y = 0;
+				}
+				else if (input.Event.KeyEvent.wVirtualKeyCode == VK_DOWN) {//down
 					y++;
+					if (y > 9) y = 9;
+				}
 				gotoxy(x, y);
+	
 			}
 		}
 	}
-	return 1;
+	return S;
 }
 
 void ControlThread(void *param) {
@@ -181,90 +220,37 @@ void ControlThread(void *param) {
 
 void Apress(shogi *s, struct userData mate_data, SOCKET sk)
 {
+	int reval;
+	struct sending S;
+	S = choose(s);
+	char buf[sizeof(struct sending)];
 
-	int id = 0;
-	int lock = 1;
-	printf("\n請下棋\n\n");
-
-	
-
-	while (lock) {
-		choose();
-
-		
-		/*
-		s->showSurvive(*s);
-		printf("\n輸入棋子編號:");
-		scanf("%d", &id);
-		getchar();
-		if (id < 0 || id >16) {
-			cls();
-			s->print(*s);
-			printf("\n輸入錯誤, 重新輸入...\n");
-			continue;
-		}
-
-		if (s->pos[1][id].x == -1) {
-			cls();
-			s->print(*s);
-			printf("\n該棋子已陣亡, 重新輸入...\n");
-			continue;
-		
-		}
-
-		
-		lock = 0;
-		cls();
-		s->print(*s);
-		while (1) {
-
-			int val;
-			char x;
-			int y = 0;
-			char piece[2];
-			
-			getPiece(id, piece, s->isblack);
-
-			printf("\n您目前選擇的棋子 %c%c(%c,%d) \n", piece[0], piece[1], 'A'  + s->pos[1][id].x, s->pos[1][id].y);
-			printf("輸入移動座標 ex: J 6 (重新選擇輸入 0 0):");
-			scanf("%c %d", &x, &y);
-			getchar();
-			if ( x == '0' && y == 0) {
-				cls();
-				s->print(*s);
-				printf("\n重新選擇棋子\n\n");
-				lock = 1;
-				break;
-			}
-			if (x < 'A' || x> 'J' || y < 0 || y>9) {
-				cls();
-				s->print(*s);
-				printf("\n輸入錯誤，重新輸入...\n");
-				continue;
-			}
-
-			val = s->move(s, id, x-'A', y);
-
-			if (val == 0) {
-				cls();
-				s->print(*s);
-				printf("\n移動失敗，重新移動...\n");
-				continue;
-			}
-			cls();
-			s->print(*s);
-
-			break;
-		}*/
-	}
-
+	memcpy(buf, &S, sizeof(S));
+	reval = send(sk, buf, sizeof(buf), 0);
+	reval = WSAGetLastError();
 }
 
 void Brefresh(shogi *s, struct userData mate_data, SOCKET sk)
 {
+	cls();
+	s->print(*s);
+
 	printf("等待對方下棋\n");
+	struct sending S;
+	int reval;
+	char buf[sizeof(struct sending)];
+	reval = recvData(sk, buf, sizeof(struct sending));
 
+	if (reval > 0) {
 
+		memcpy(&S, buf, sizeof(struct sending));
+
+		s->pos[0][S.id].x = S.move.x;
+		s->pos[0][S.id].y = S.move.y;
+
+		s->pos[1][S.dead].x = -1;
+		s->pos[1][S.dead].y = -1;
+	}
 
 }
 
@@ -286,9 +272,8 @@ void buildServer(SOCKET* sk, int port){
 
 }
 
-void connectMate(SOCKET* sk, struct userData mate_data, int port)
+void connectMate(SOCKET* sk, struct userData mate_data, int port, SOCKET* mate)
 {
-	SOCKET mate;
 	struct sockaddr_in mate_addr;
 	int reval;
 
@@ -297,12 +282,14 @@ void connectMate(SOCKET* sk, struct userData mate_data, int port)
 
 		buildServer(sk , port);
 
-		reval =	acceptConnect(*sk, &mate, &mate_addr);
+		reval =	acceptConnect(*sk, mate, &mate_addr);
+
 
 	}
 	else{
 
 		reval = connectServer(*sk, mate_data.addr);
+		mate = -1;
 	}
 
 	if (reval == -1) {
@@ -319,8 +306,7 @@ void connectMate(SOCKET* sk, struct userData mate_data, int port)
 }
 void gotoxy(int xpos, int ypos)
 {
-	if (xpos < 0 || xpos > 8 || ypos < 0 || ypos > 9)
-		return;
+	
 	COORD scrn;
 	HANDLE hOuput = GetStdHandle(STD_OUTPUT_HANDLE);
 	scrn.X = offset(xpos)*2; scrn.Y = offset(ypos);
@@ -332,15 +318,16 @@ void login(SOCKET *sk, char* ID) {
 
 	struct sockaddr_in addr;
 
-	char* ip;
+	//char* ip;
+	char ip[20];
 	int port;
 	int reval;
 
 	printf("設定一個響亮的稱呼來震懾敵手吧!\n");
 	printf("你的稱呼:");
 
-	//scanf("%s", ID);
-	strcpy(ID, "456");
+	scanf("%s", ID);
+	//strcpy(ID, "456");
 
 
 	cls();
@@ -354,13 +341,13 @@ void login(SOCKET *sk, char* ID) {
 
 		printf("IP:");
 		
-		//scanf("%s", ip);
-		ip = "127.0.0.1";
+		scanf("%s", ip);
+		//ip = "127.0.0.1";
 
 		printf("Port:");
 
-		//scanf("%d", &port);
-		port = 123;
+		scanf("%d", &port);
+		//port = 123;
 
 		cls();
 
@@ -383,23 +370,43 @@ void login(SOCKET *sk, char* ID) {
 	}
 }
 
-void pressPiece(shogi *s, struct userData mate_data, SOCKET sk)
+void pressPiece(shogi *s, struct userData mate_data, SOCKET sk, SOCKET mate)
 {
-	if (s->isblack == 1) {
-		while (1) {
-			Apress(s, mate_data, sk);
+	while (1) {
+		if (s->isblack == 1) {
+			Apress(s, mate_data, mate);
+			if (s->pos[0][0].x == -1) {
+				cls();
+				s->print(*s);
+				printf("你贏了!!");
+				return;
+			}
+			else if (s->pos[1][0].x == -1) {
+				cls();
+				s->print(*s);
+				printf("你輸了!!");
+				return;
+			}
+				
+			Brefresh(s, mate_data, mate);
 		}
-		
-		Brefresh(s, mate_data, sk);
-		Sleep(100000);
-	}
-	else {
-		while (1) {
-			Apress(s, mate_data, sk);
-		}
+		else {
 
-		Brefresh(s, mate_data, sk);
-		Sleep(100000);
+			Brefresh(s, mate_data, sk);
+			if (s->pos[0][0].x == -1) {
+				cls();
+				s->print(*s);
+				printf("你贏了!!");
+				return;
+			}
+			else if (s->pos[1][0].x == -1) {
+				cls();
+				s->print(*s);
+				printf("你輸了!!");
+				return;
+			}
+			Apress(s, mate_data, sk);
+		}
 	}
 }
 

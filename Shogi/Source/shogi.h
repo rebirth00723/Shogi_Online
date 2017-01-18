@@ -7,6 +7,13 @@
 #pragma warning (disable:4996)
 
 
+struct sending {
+
+	POS move;
+	int id;
+	int dead;
+};
+
 typedef struct _tagShogi{
 
 	POS pos[2][16];//1 : 自己 0 :別人
@@ -19,9 +26,9 @@ typedef struct _tagShogi{
 int		checkNoPiece(shogi s, POS pos);
 shogi	initShogi(int isblack);
 
-void	kill(shogi* s, POS pos);
+void	kill(shogi* s, POS pos, struct sending*);
 
-int		move(shogi* s, int id, int x, int y);
+int		move(shogi* s, int id, int x, int y, struct sending*);
 
 int		offset(int pos);
 

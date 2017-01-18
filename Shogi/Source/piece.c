@@ -1,12 +1,16 @@
 ﻿#include "piece.h"
 // black : 1 red : 0
-
+char* piece[2] = { { "帥仕仕相相硨硨傌傌炮炮兵兵兵兵兵" },{ "將士士象象車車馬馬包包卒卒卒卒卒" } };
 void getPiece(int i, char* str, int color) {
-
-	char* piece[2] = { { "帥仕仕相相硨硨傌傌炮炮兵兵兵兵兵" },{ "將士士象象車車馬馬包包卒卒卒卒卒" } };
 
 	str[0] = piece[color][i * 2];
 	str[1] = piece[color][i * 2 + 1];
+
+
+}
+char* getPiecer(int i, int color) {
+	
+	return &piece[color][i * 2];
 
 
 }

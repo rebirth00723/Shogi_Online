@@ -187,8 +187,7 @@ void buildServer(SOCKET *sk) {
 
 	printf("建立伺服器，設定Port:");
 
-	port = 123;
-	//scanf("%d", &port);
+	scanf("%d", &port);
 
 	cls();
 

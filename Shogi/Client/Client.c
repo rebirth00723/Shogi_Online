@@ -79,10 +79,7 @@ int main() {
 	shogi s = initShogi(mate_data.isServer);
 
 	while (1) {
-		if (mate_data.isServer == 1)
-			printf("你是黑色\n");
-		else
-			printf("你是紅色\n");
+
 		s.print(s);
 	
 		pressPiece(&s, mate_data, sk);
@@ -141,7 +138,7 @@ int choose()
 	GetConsoleMode(handle, &mode);//得到基本輸入的Mode
 	SetConsoleMode(handle, mode & ~ENABLE_LINE_INPUT);//設定基本輸入模式，其中~ENABLE_LINE_INPUT代表不用按下Enter也可動作
 
-	gotoxy(9, 9);//預計設定好案件
+	gotoxy(0, 0);//預計設定好案件
 
 	while (ReadConsoleInput(handle, &input, 1, &cnt))//開始讀取使用者的動作
 	{
@@ -157,18 +154,24 @@ int choose()
 					else {
 						end.x = x;
 						end.y = y;
+						break;
 					}
 
 				else if (input.Event.KeyEvent.wVirtualKeyCode == VK_ESCAPE)//Esc
-					printf("Esc\n");
+					start.x = -1;
 				else if (input.Event.KeyEvent.wVirtualKeyCode == VK_LEFT)//left
+					x--;
 				else if (input.Event.KeyEvent.wVirtualKeyCode == VK_RIGHT)//right
+					x++;
 				else if (input.Event.KeyEvent.wVirtualKeyCode == VK_UP)//up
+					y--;
 				else if (input.Event.KeyEvent.wVirtualKeyCode == VK_DOWN)//down
+					y++;
+				gotoxy(x, y);
 			}
 		}
 	}
-	return 0;
+	return 1;
 }
 
 void ControlThread(void *param) {
@@ -186,10 +189,10 @@ void Apress(shogi *s, struct userData mate_data, SOCKET sk)
 	
 
 	while (lock) {
-
+		choose();
 
 		
-
+		/*
 		s->showSurvive(*s);
 		printf("\n輸入棋子編號:");
 		scanf("%d", &id);
@@ -252,7 +255,7 @@ void Apress(shogi *s, struct userData mate_data, SOCKET sk)
 			s->print(*s);
 
 			break;
-		}
+		}*/
 	}
 
 }
@@ -316,9 +319,11 @@ void connectMate(SOCKET* sk, struct userData mate_data, int port)
 }
 void gotoxy(int xpos, int ypos)
 {
+	if (xpos < 0 || xpos > 8 || ypos < 0 || ypos > 9)
+		return;
 	COORD scrn;
 	HANDLE hOuput = GetStdHandle(STD_OUTPUT_HANDLE);
-	scrn.X = xpos; scrn.Y = ypos;
+	scrn.X = offset(xpos)*2; scrn.Y = offset(ypos);
 	SetConsoleCursorPosition(hOuput, scrn);
 } //接著輸入這個函式,這樣就可以在其他函式使用了
 

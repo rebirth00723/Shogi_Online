@@ -18,14 +18,14 @@ struct sending choose(shogi *s);
 
 void ControlThread(void*);
 
-void Apress(shogi *s, struct userData mate_data, SOCKET sk);
+void Apress(shogi *s, struct userData mate_data, SOCKET sk, char*);
 void Brefresh(shogi *s, struct userData mate_data, SOCKET sk);
 void buildServer(SOCKET*, int);
 
 void connectMate(SOCKET*, struct userData, int, SOCKET*);
 void gotoxy(int, int);
 void login(SOCKET*, char*);
-void pressPiece(shogi *s, struct userData mate_data, SOCKET sk, SOCKET mate);
+void pressPiece(shogi *s, struct userData mate_data, SOCKET sk, SOCKET mate, char*);
 
 struct userData waitMatch(SOCKET);
 
@@ -80,7 +80,7 @@ int main() {
 	shogi s = initShogi(mate_data.isServer);
 
 
-	pressPiece(&s, mate_data, sk, mate);
+	pressPiece(&s, mate_data, sk, mate, ID);
 
 	system("pause");
 	
@@ -129,9 +129,7 @@ struct sending choose(shogi *s)
 	handle = GetStdHandle(STD_INPUT_HANDLE);//先取得基本輸入Handle
 	GetConsoleMode(handle, &mode);//得到基本輸入的Mode
 	SetConsoleMode(handle, mode & ~ENABLE_LINE_INPUT);//設定基本輸入模式，其中~ENABLE_LINE_INPUT代表不用按下Enter也可動作
-	cls();
-	s->print(*s);
-	printf("請下棋\n");
+	
 	gotoxy(0, 9);//預計設定好案件
 
 	while (ReadConsoleInput(handle, &input, 1, &cnt))//開始讀取使用者的動作
@@ -218,11 +216,17 @@ void ControlThread(void *param) {
 }
 
 
-void Apress(shogi *s, struct userData mate_data, SOCKET sk)
+void Apress(shogi *s, struct userData mate_data, SOCKET sk, char* ID)
 {
 	int reval;
 	struct sending S;
+
+	cls();
+	s->print(*s);
+	printf("請下棋\n");
+
 	S = choose(s);
+
 	char buf[sizeof(struct sending)];
 
 	memcpy(buf, &S, sizeof(S));
@@ -235,7 +239,7 @@ void Brefresh(shogi *s, struct userData mate_data, SOCKET sk)
 	cls();
 	s->print(*s);
 
-	printf("等待對方下棋\n");
+	printf("耐心點，等待對手[%s]下棋...\n", mate_data.ID);
 	struct sending S;
 	int reval;
 	char buf[sizeof(struct sending)];
@@ -330,7 +334,7 @@ void login(SOCKET *sk, char* ID) {
 	//strcpy(ID, "456");
 
 
-	cls();
+	//cls();
 
 	printf("真是個不錯的稱呼 %s\n", ID);
 
@@ -370,21 +374,21 @@ void login(SOCKET *sk, char* ID) {
 	}
 }
 
-void pressPiece(shogi *s, struct userData mate_data, SOCKET sk, SOCKET mate)
+void pressPiece(shogi *s, struct userData mate_data, SOCKET sk, SOCKET mate, char* ID)
 {
 	while (1) {
 		if (s->isblack == 1) {
-			Apress(s, mate_data, mate);
+			Apress(s, mate_data, mate, ID);
 			if (s->pos[0][0].x == -1) {
 				cls();
 				s->print(*s);
-				printf("你贏了!!");
+				printf("恭喜[%s]，你贏了!!", ID);
 				return;
 			}
 			else if (s->pos[1][0].x == -1) {
 				cls();
 				s->print(*s);
-				printf("你輸了!!");
+				printf("你輸給了[%s]，再接再厲!!", mate_data.ID);
 				return;
 			}
 				
@@ -396,16 +400,16 @@ void pressPiece(shogi *s, struct userData mate_data, SOCKET sk, SOCKET mate)
 			if (s->pos[0][0].x == -1) {
 				cls();
 				s->print(*s);
-				printf("你贏了!!");
+				printf("恭喜[%s]，你贏了!!", ID);
 				return;
 			}
 			else if (s->pos[1][0].x == -1) {
 				cls();
 				s->print(*s);
-				printf("你輸了!!");
+				printf("你輸給了[%s]，再接再厲!!", mate_data.ID);
 				return;
 			}
-			Apress(s, mate_data, sk);
+			Apress(s, mate_data, sk, ID);
 		}
 	}
 }
@@ -434,7 +438,8 @@ struct userData waitMatch(SOCKET sk) {
 		printf("配對成功，收到對戰者資訊...\n");
 		printf("對手名子: %s\n", ud.ID);
 		printf("對手PORT: %d\n", ntohs(ud.addr.sin_port));
-	
+		printf("三秒後開始棋局");
+		Sleep(2900);
 
 	}
 

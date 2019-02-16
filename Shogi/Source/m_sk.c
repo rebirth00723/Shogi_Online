@@ -4,6 +4,7 @@
 #define FILE_NOT_FOUND (HANDLE)0xFFFFFFFFF
 
 #pragma warning(disable: 4996)
+#pragma comment (lib, "Ws2_32.lib")
 #pragma comment (lib, "wsock32.lib")
 
 
